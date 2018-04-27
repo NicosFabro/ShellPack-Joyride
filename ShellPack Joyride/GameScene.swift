@@ -48,63 +48,20 @@ class GameScene: SKScene {
         SKTexture(imageNamed: "koopa-naked8.png")
     ]
     
+    // Enumeración de los nodos que pueden colisionar
+    // se les debe representar con números potencia de 2
+    enum tipoNodo: UInt32 {
+        case koopa = 1       // La mosquita colisiona
+        case limits = 2      // Si choca con el suelo o el techo
+    }
+    
     override func didMove(to view: SKView) {
-        
-        koopa.position = CGPoint(x: 0.0, y: 0.0)
-        bg.position = CGPoint(x: 0.0, y: 0.0)
-        
-        koopa = SKSpriteNode(texture: texturesKoopaFly[0])
-        bg.zPosition = -1
-        
+        createKoopa()
         cerateBgAnimated()
+        createLimits()
+        print(self.frame.minX)
+        scene?.scaleMode = SKSceneScaleMode.resizeFill
         
-        self.addChild(koopa)
-    }
-    
-    func cerateBgAnimated() {
-        // Textura para el fondo
-        let texturaBg = SKTexture(imageNamed: "bg.png")
-        
-        // Acciones del fondo (para hacer ilusión de movimiento)
-        // Desplazamos en el eje de las x cada 0.3s
-        let movimientoFondo = SKAction.move(by: CGVector(dx: -texturaBg.size().width, dy: 0), duration: 4)
-        
-        let movimientoFondoOrigen = SKAction.move(by: CGVector(dx: texturaBg.size().width, dy: 0), duration: 0)
-        
-        // repetimos hasta el infinito
-        let movimientoInfinitoFondo = SKAction.repeatForever(SKAction.sequence([movimientoFondo, movimientoFondoOrigen]))
-        
-        // Necesitamos más de un fondo para que no se vea la pantalla en negro
-        // contador de fondos
-        var i: CGFloat = 0
-        
-        while i < 2 {
-            // Le ponemos la textura al fondo
-            bg = SKSpriteNode(texture: texturaBg)
-            
-            // Indicamos la posición inicial del fondo
-            bg.position = CGPoint(x: texturaBg.size().width * i, y: self.frame.midY)
-            
-            // Estiramos la altura de la imagen para que se adapte al alto de la pantalla
-            // bg.size.height = self.frame.height
-            
-            // Indicamos zPosition para que quede detrás de todo
-            bg.zPosition = -1
-            
-            // Aplicamos la acción
-            bg.run(movimientoInfinitoFondo)
-            // Ponemos el fondo en la escena
-            self.addChild(bg)
-            
-            // Incrementamos contador
-            i += 1
-        }
-        
-    }
-    
-    func animateFly() {
-        let animacion = SKAction.animate(with: texturesKoopaFly, timePerFrame: 0.05)
-        koopa.run(animacion)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -113,6 +70,8 @@ class GameScene: SKScene {
          }
          
          for t in touches { self.touchDown(atPoint: t.location(in: self)) }*/
+        self.koopa.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
+        self.koopa.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 50))
         animateFly()
     }
     
@@ -132,5 +91,99 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+    }
+    
+    func createKoopa() {
+        self.koopa = SKSpriteNode(texture: texturesKoopaFly[0])
+        
+        self.koopa.physicsBody = SKPhysicsBody(circleOfRadius: texturesKoopaFly[0].size().height / 2)
+        self.koopa.zPosition = 0
+        
+        self.koopa.physicsBody?.isDynamic = true
+        
+        self.koopa.position = CGPoint(x: self.frame.minX - self.frame.minX * 0.1, y: self.frame.midY)
+        
+        self.addChild(koopa)
+    }
+    
+    func cerateBgAnimated() {
+        
+        bg.position = CGPoint(x: 0.0, y: 0.0)
+        bg.zPosition = -1
+        
+        // Textura para el fondo
+        let textureBg = SKTexture(imageNamed: "bg.png")
+        
+        // Acciones del fondo (para hacer ilusión de movimiento)
+        // Desplazamos en el eje de las x cada 0.3s
+        let movimientoFondo = SKAction.move(by: CGVector(dx: -textureBg.size().width, dy: 0), duration: 4)
+        
+        let originalBgMovement = SKAction.move(by: CGVector(dx: textureBg.size().width, dy: 0), duration: 0)
+        
+        // repetimos hasta el infinito
+        let infiniteBgMovement = SKAction.repeatForever(SKAction.sequence([movimientoFondo, originalBgMovement]))
+        
+        // Necesitamos más de un fondo para que no se vea la pantalla en negro
+        // contador de fondos
+        var i: CGFloat = 0
+        
+        while i < 2 {
+            // Le ponemos la textura al fondo
+            bg = SKSpriteNode(texture: textureBg)
+            
+            // Indicamos la posición inicial del fondo
+            bg.position = CGPoint(x: textureBg.size().width * i, y: self.frame.midY)
+            
+            // Estiramos la altura de la imagen para que se adapte al alto de la pantalla
+            // bg.size.height = self.frame.height
+            
+            // Indicamos zPosition para que quede detrás de todo
+            bg.zPosition = -1
+            
+            // Aplicamos la acción
+            bg.run(infiniteBgMovement)
+            // Ponemos el fondo en la escena
+            self.addChild(bg)
+            
+            // Incrementamos contador
+            i += 1
+        }
+        
+    }
+    
+    func createLimits() {
+        let ground = SKNode()
+        ground.position = CGPoint(x: -self.frame.midX, y: -self.frame.height / 2)
+        ground.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: self.frame.width, height: 1))
+        // el suelo se tiene que estar quieto
+        ground.physicsBody!.isDynamic = false
+        
+        // Categoría para collision
+        ground.physicsBody!.categoryBitMask = tipoNodo.limits.rawValue
+        // Colisiona con la mosquita
+        ground.physicsBody!.collisionBitMask = tipoNodo.koopa.rawValue
+        // contacto con el suelo
+        ground.physicsBody!.contactTestBitMask = tipoNodo.koopa.rawValue
+        
+        let roof = SKNode()
+        roof.position = CGPoint(x: -self.frame.midX, y: self.frame.height / 2)
+        roof.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: self.frame.width, height: 1))
+        // el suelo se tiene que estar quieto
+        roof.physicsBody!.isDynamic = false
+        
+        // Categoría para collision
+        roof.physicsBody!.categoryBitMask = tipoNodo.limits.rawValue
+        // Colisiona con la mosquita
+        roof.physicsBody!.collisionBitMask = tipoNodo.koopa.rawValue
+        // contacto con el suelo
+        roof.physicsBody!.contactTestBitMask = tipoNodo.koopa.rawValue
+        
+        self.addChild(ground)
+        self.addChild(roof)
+    }
+    
+    func animateFly() {
+        let animationFly = SKAction.animate(with: texturesKoopaFly, timePerFrame: 0.05)
+        koopa.run(animationFly)
     }
 }
