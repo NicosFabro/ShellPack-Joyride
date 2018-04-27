@@ -56,17 +56,12 @@ class GameScene: SKScene {
         koopa = SKSpriteNode(texture: texturesKoopaFly[0])
         bg.zPosition = -1
         
-        let animacion = SKAction.animate(with: texturesKoopaFly, timePerFrame: 0.2)
-        
-        let animacionRepetida = SKAction.repeatForever(animacion)
-        
-        koopa.run(animacionRepetida)
-        crearFondoConAnimacion()
+        cerateBgAnimated()
         
         self.addChild(koopa)
     }
     
-    func crearFondoConAnimacion() {
+    func cerateBgAnimated() {
         // Textura para el fondo
         let texturaBg = SKTexture(imageNamed: "bg.png")
         
@@ -107,12 +102,18 @@ class GameScene: SKScene {
         
     }
     
+    func animateFly() {
+        let animacion = SKAction.animate(with: texturesKoopaFly, timePerFrame: 0.05)
+        koopa.run(animacion)
+    }
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         /*if let label = self.label {
          label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
          }
          
          for t in touches { self.touchDown(atPoint: t.location(in: self)) }*/
+        animateFly()
     }
     
     /*
