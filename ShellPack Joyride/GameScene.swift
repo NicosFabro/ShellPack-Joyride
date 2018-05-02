@@ -13,6 +13,7 @@ class GameScene: SKScene {
     
     var koopa = SKSpriteNode()
     var bg = SKSpriteNode()
+    var coin = SKSpriteNode()
     
     let texturesKoopaFly = [
         SKTexture(imageNamed: "koopa-fly1.png"),
@@ -48,20 +49,43 @@ class GameScene: SKScene {
         SKTexture(imageNamed: "koopa-naked8.png")
     ]
     
+    let texturasCoin = [
+        SKTexture(imageNamed: "coin1.png"),
+        SKTexture(imageNamed: "coin2.png"),
+        SKTexture(imageNamed: "coin3.png"),
+        SKTexture(imageNamed: "coin4.png"),
+        SKTexture(imageNamed: "coin5.png"),
+        SKTexture(imageNamed: "coin6.png"),
+        SKTexture(imageNamed: "coin7.png"),
+        SKTexture(imageNamed: "coin8.png"),
+        SKTexture(imageNamed: "coin9.png"),
+        SKTexture(imageNamed: "coin10.png"),
+        SKTexture(imageNamed: "coin11.png"),
+        SKTexture(imageNamed: "coin12.png"),
+        SKTexture(imageNamed: "coin13.png"),
+        SKTexture(imageNamed: "coin14.png"),
+        SKTexture(imageNamed: "coin15.png"),
+        SKTexture(imageNamed: "coin16.png"),
+        SKTexture(imageNamed: "coin17.png"),
+        SKTexture(imageNamed: "coin18.png"),
+        SKTexture(imageNamed: "coin19.png"),
+        SKTexture(imageNamed: "coin20.png"),
+        SKTexture(imageNamed: "coin21.png")
+    ]
+    
     // Enumeración de los nodos que pueden colisionar
     // se les debe representar con números potencia de 2
     enum tipoNodo: UInt32 {
-        case koopa = 1       // La mosquita colisiona
+        case koopa = 1       // Koopa colisiona
         case limits = 2      // Si choca con el suelo o el techo
     }
     
     override func didMove(to view: SKView) {
         createKoopa()
+        createCoin()
         cerateBgAnimated()
         createLimits()
-        print(self.frame.minX)
         scene?.scaleMode = SKSceneScaleMode.resizeFill
-        
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -97,7 +121,7 @@ class GameScene: SKScene {
         self.koopa = SKSpriteNode(texture: texturesKoopaFly[0])
         
         self.koopa.physicsBody = SKPhysicsBody(circleOfRadius: texturesKoopaFly[0].size().height / 2)
-        self.koopa.zPosition = 0
+        self.koopa.zPosition = 8
         
         self.koopa.physicsBody?.isDynamic = true
         
@@ -129,19 +153,19 @@ class GameScene: SKScene {
         
         while i < 2 {
             // Le ponemos la textura al fondo
-            bg = SKSpriteNode(texture: textureBg)
+            self.bg = SKSpriteNode(texture: textureBg)
             
             // Indicamos la posición inicial del fondo
-            bg.position = CGPoint(x: textureBg.size().width * i, y: self.frame.midY)
+            self.bg.position = CGPoint(x: textureBg.size().width * i, y: self.frame.midY)
             
             // Estiramos la altura de la imagen para que se adapte al alto de la pantalla
             // bg.size.height = self.frame.height
             
             // Indicamos zPosition para que quede detrás de todo
-            bg.zPosition = -1
+            self.bg.zPosition = -1
             
             // Aplicamos la acción
-            bg.run(infiniteBgMovement)
+            self.bg.run(infiniteBgMovement)
             // Ponemos el fondo en la escena
             self.addChild(bg)
             
@@ -149,6 +173,24 @@ class GameScene: SKScene {
             i += 1
         }
         
+    }
+    
+    func createCoin() {
+        
+        self.coin = SKSpriteNode(texture: texturasCoin[0])
+        
+        self.coin.physicsBody = SKPhysicsBody(circleOfRadius: texturasCoin[0].size().height / 2)
+        self.coin.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
+        self.coin.zPosition = 0
+        self.coin.setScale(0.5)
+        
+        self.coin.physicsBody?.isDynamic = false
+        
+        let coinAnimation = SKAction.animate(with: texturasCoin, timePerFrame: 0.5)
+        let coinAnimationForever = SKAction.repeatForever(coinAnimation)
+        self.coin.run(coinAnimationForever)
+        
+        self.addChild(coin)
     }
     
     func createLimits() {
