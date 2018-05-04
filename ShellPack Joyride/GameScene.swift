@@ -88,7 +88,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
         self.physicsWorld.contactDelegate = self
-        timer = Timer.scheduledTimer(timeInterval: 4, target: self, selector: #selector(self.createCoin), userInfo: nil, repeats: true)
+        timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.createCoin), userInfo: nil, repeats: true)
         
         crearKoopa()
         crearBgAnimado()
@@ -125,7 +125,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
-        self.coin.position.x -= 10
+//        self.coin.position.x -= 10
         lblScore.text = "Score: \(score)"
         lblScore.position = CGPoint(x: self.frame.maxX - lblScore.frame.width / 2, y: self.frame.maxY - lblScore.frame.height)
     }
@@ -245,6 +245,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.coin.physicsBody?.collisionBitMask = 0
         self.coin.physicsBody?.categoryBitMask = tipoNodo.coin.rawValue
         self.coin.physicsBody?.contactTestBitMask = tipoNodo.koopa.rawValue
+        
+        let moverCoin = SKAction.move(by: CGVector(dx: -3 * self.frame.width, dy: 0), duration: TimeInterval(self.frame.width / 80))
+        let borrarCoin = SKAction.removeFromParent()
+        let moverBorrarCoin = SKAction.sequence([moverCoin, borrarCoin])
+        
+        self.coin.run(moverBorrarCoin)
         
         self.addChild(coin)
     }
