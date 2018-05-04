@@ -87,7 +87,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func didMove(to view: SKView) {
         self.physicsWorld.contactDelegate = self
         crearKoopa()
-        createCoin(position: CGPoint(x: self.frame.minX - self.frame.minX * 0.1, y: self.frame.maxY - 100))
+        createCoin(position: CGPoint(x: self.frame.maxX, y: self.frame.maxY - 100))
         crearBgAnimado()
         createLimits()
         createScoreLabel()
@@ -119,7 +119,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
-        
+        self.coin.position.x -= 10
         lblScore.text = "Score: \(score)"
         lblScore.position = CGPoint(x: self.frame.maxX - lblScore.frame.width / 2, y: self.frame.maxY - lblScore.frame.height)
     }
