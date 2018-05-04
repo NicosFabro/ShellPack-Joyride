@@ -14,6 +14,7 @@ class GameScene: SKScene {
     var koopa = SKSpriteNode()
     var bg = SKSpriteNode()
     var coin = SKSpriteNode()
+    let lblScore = SKLabelNode(fontNamed: "AvenirNext-Bold")
     
     let texturesKoopaFly = [
         SKTexture(imageNamed: "koopa-fly1.png"),
@@ -76,15 +77,19 @@ class GameScene: SKScene {
     // Enumeración de los nodos que pueden colisionar
     // se les debe representar con números potencia de 2
     enum tipoNodo: UInt32 {
-        case koopa = 1       // Koopa colisiona
-        case limits = 2      // Si choca con el suelo o el techo
+        case koopa = 1      // Koopa colisiona
+        case limits = 2     // Si choca con el suelo o el techo
+        case coin = 3       // Si toca una moneda
     }
+    
+    var score = 0
     
     override func didMove(to view: SKView) {
         createKoopa()
-        createCoin()
+        createCoin(position: CGPoint(x: self.frame.minX - self.frame.minX * 0.1, y: self.frame.maxY - 100))
         cerateBgAnimated()
         createLimits()
+        createScoreLabel()
         scene?.scaleMode = SKSceneScaleMode.resizeFill
     }
     
@@ -115,6 +120,8 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+        
+        lblScore.text = "Score: \(score)"
     }
     
     func createKoopa() {
@@ -172,21 +179,29 @@ class GameScene: SKScene {
             // Incrementamos contador
             i += 1
         }
-        
     }
     
-    func createCoin() {
+    func createScoreLabel() {
+        lblScore.text = "Score: \(score)"
+        lblScore.fontSize = 24
+        lblScore.fontColor = SKColor.green
+        lblScore.position = CGPoint(x: self.frame.maxX - lblScore.frame.width / 2, y: self.frame.maxY - lblScore.frame.height)
+        lblScore.zPosition = 10
+        self.addChild(lblScore)
+    }
+    
+    func createCoin(position: CGPoint) {
         
         self.coin = SKSpriteNode(texture: texturasCoin[0])
         
         self.coin.physicsBody = SKPhysicsBody(circleOfRadius: texturasCoin[0].size().height / 2)
-        self.coin.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
+        self.coin.position = position
         self.coin.zPosition = 0
         self.coin.setScale(0.5)
         
         self.coin.physicsBody?.isDynamic = false
         
-        let coinAnimation = SKAction.animate(with: texturasCoin, timePerFrame: 0.5)
+        let coinAnimation = SKAction.animate(with: texturasCoin, timePerFrame: 0.02)
         let coinAnimationForever = SKAction.repeatForever(coinAnimation)
         self.coin.run(coinAnimationForever)
         
@@ -202,7 +217,7 @@ class GameScene: SKScene {
         
         // Categoría para collision
         ground.physicsBody!.categoryBitMask = tipoNodo.limits.rawValue
-        // Colisiona con la mosquita
+        // Colisiona con el koopa
         ground.physicsBody!.collisionBitMask = tipoNodo.koopa.rawValue
         // contacto con el suelo
         ground.physicsBody!.contactTestBitMask = tipoNodo.koopa.rawValue
@@ -210,12 +225,12 @@ class GameScene: SKScene {
         let roof = SKNode()
         roof.position = CGPoint(x: -self.frame.midX, y: self.frame.height / 2)
         roof.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: self.frame.width, height: 1))
-        // el suelo se tiene que estar quieto
+        // el techo se tiene que estar quieto
         roof.physicsBody!.isDynamic = false
         
         // Categoría para collision
         roof.physicsBody!.categoryBitMask = tipoNodo.limits.rawValue
-        // Colisiona con la mosquita
+        // Colisiona con el koopa
         roof.physicsBody!.collisionBitMask = tipoNodo.koopa.rawValue
         // contacto con el suelo
         roof.physicsBody!.contactTestBitMask = tipoNodo.koopa.rawValue
@@ -223,6 +238,8 @@ class GameScene: SKScene {
         self.addChild(ground)
         self.addChild(roof)
     }
+    
+//    https://stackoverflow.com/questions/21267600/is-it-possible-to-deactivate-collisions-in-physics-bodies-in-spritekit
     
     func animateFly() {
         let animationFly = SKAction.animate(with: texturesKoopaFly, timePerFrame: 0.05)
