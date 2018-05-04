@@ -133,6 +133,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if (cuerpoA.categoryBitMask == tipoNodo.koopa.rawValue && cuerpoB.categoryBitMask == tipoNodo.coin.rawValue) || (cuerpoA.categoryBitMask == tipoNodo.coin.rawValue && cuerpoB.categoryBitMask == tipoNodo.koopa.rawValue) {
             self.score += 1
             lblScore.text = "Score: \(score)"
+            
+            if cuerpoA.categoryBitMask == tipoNodo.coin.rawValue {
+                cuerpoA.node?.removeFromParent()
+            } else {
+                cuerpoB.node?.removeFromParent()
+            }
         }
     }
     
