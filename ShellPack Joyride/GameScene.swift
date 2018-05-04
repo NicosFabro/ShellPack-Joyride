@@ -79,7 +79,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     enum tipoNodo: UInt32 {
         case koopa = 1      // Koopa colisiona
         case limits = 2     // Si choca con el suelo o el techo
-        case coin = 3       // Si toca una moneda
+        case coin = 0       // Si toca una moneda
     }
     
     var score = 0
@@ -100,8 +100,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
          }
          
          for t in touches { self.touchDown(atPoint: t.location(in: self)) }*/
-        self.koopa.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
-        self.koopa.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 50))
         animateFly()
     }
     
@@ -158,7 +156,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.koopa.physicsBody?.collisionBitMask = tipoNodo.limits.rawValue
         
 //        Hace contacto con:
-        self.koopa.physicsBody?.contactTestBitMask = tipoNodo.limits.rawValue | tipoNodo.coin.rawValue
+        self.koopa.physicsBody?.contactTestBitMask = tipoNodo.coin.rawValue
         
         self.addChild(koopa)
     }
@@ -230,8 +228,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let coinAnimationForever = SKAction.repeatForever(coinAnimation)
         self.coin.run(coinAnimationForever)
         
-        self.coin.physicsBody?.categoryBitMask = tipoNodo.coin.rawValue
         self.coin.physicsBody?.collisionBitMask = 0
+        self.coin.physicsBody?.categoryBitMask = tipoNodo.coin.rawValue
         self.coin.physicsBody?.contactTestBitMask = tipoNodo.koopa.rawValue
         
         self.addChild(coin)
@@ -269,6 +267,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func animateFly() {
+        self.koopa.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
+        self.koopa.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 50))
         let animationFly = SKAction.animate(with: texturesKoopaFly, timePerFrame: 0.05)
         koopa.run(animationFly)
     }
