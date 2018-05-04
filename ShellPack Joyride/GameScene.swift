@@ -11,6 +11,8 @@ import GameplayKit
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
+    var timer = Timer()
+    
     var koopa = SKSpriteNode()
     var bg = SKSpriteNode()
     var coin = SKSpriteNode()
@@ -86,8 +88,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
         self.physicsWorld.contactDelegate = self
+        timer = Timer.scheduledTimer(timeInterval: 4, target: self, selector: #selector(self.createCoin), userInfo: nil, repeats: true)
+        
         crearKoopa()
-        createCoin(position: CGPoint(x: self.frame.maxX, y: self.frame.maxY - 100))
         crearBgAnimado()
         createLimits()
         createScoreLabel()
@@ -219,12 +222,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.addChild(lblScore)
     }
     
-    func createCoin(position: CGPoint) {
+    @objc func createCoin(position: CGPoint) {
         
         self.coin = SKSpriteNode(texture: texturasCoin[0])
         
         self.coin.physicsBody = SKPhysicsBody(circleOfRadius: texturasCoin[0].size().height / 2)
-        self.coin.position = position
+        self.coin.position = CGPoint(x: self.frame.maxX, y: self.frame.maxY - 100)
         self.coin.zPosition = 0
         self.coin.setScale(0.5)
         
