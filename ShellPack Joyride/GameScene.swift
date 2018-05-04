@@ -231,8 +231,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         self.coin.physicsBody = SKPhysicsBody(circleOfRadius: texturasCoin[0].size().height / 2)
         let maxY = Int(self.frame.maxY)
-        let minY = -1 * Int(self.frame.maxY)
-        let randY = CGFloat(arc4random_uniform(UInt32(maxY - minY))) + CGFloat(minY)
+        let randY = CGFloat(arc4random_uniform(UInt32(maxY * 2))) + CGFloat(maxY * -1)
         self.coin.position = CGPoint(x: self.frame.maxX, y: randY)
         self.coin.zPosition = 0
         self.coin.setScale(0.5)
