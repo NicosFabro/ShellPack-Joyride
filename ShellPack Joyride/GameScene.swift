@@ -95,6 +95,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         createLimits()
         createScoreLabel()
         scene?.scaleMode = SKSceneScaleMode.resizeFill
+        
+        print("Max Y = \(self.frame.maxY)")
+        print("Min Y = \(self.frame.minY)")
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -227,7 +230,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.coin = SKSpriteNode(texture: texturasCoin[0])
         
         self.coin.physicsBody = SKPhysicsBody(circleOfRadius: texturasCoin[0].size().height / 2)
-        self.coin.position = CGPoint(x: self.frame.maxX, y: self.frame.maxY - 100)
+        let maxY = Int(self.frame.maxY)
+        let minY = -1 * Int(self.frame.maxY)
+        let randY = CGFloat(arc4random_uniform(UInt32(maxY - minY))) + CGFloat(minY)
+        self.coin.position = CGPoint(x: self.frame.maxX, y: randY)
         self.coin.zPosition = 0
         self.coin.setScale(0.5)
         
