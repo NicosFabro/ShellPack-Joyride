@@ -9,7 +9,7 @@
 import SpriteKit
 import GameplayKit
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var koopa = SKSpriteNode()
     var bg = SKSpriteNode()
@@ -85,9 +85,10 @@ class GameScene: SKScene {
     var score = 0
     
     override func didMove(to view: SKView) {
-        createKoopa()
+        self.physicsWorld.contactDelegate = self
+        crearKoopa()
         createCoin(position: CGPoint(x: self.frame.minX - self.frame.minX * 0.1, y: self.frame.maxY - 100))
-        cerateBgAnimated()
+        crearBgAnimado()
         createLimits()
         createScoreLabel()
         scene?.scaleMode = SKSceneScaleMode.resizeFill
@@ -122,22 +123,47 @@ class GameScene: SKScene {
         // Called before each frame is rendered
         
         lblScore.text = "Score: \(score)"
+        lblScore.position = CGPoint(x: self.frame.maxX - lblScore.frame.width / 2, y: self.frame.maxY - lblScore.frame.height)
     }
     
-    func createKoopa() {
+    // Función para tratar las colisiones o contactos de los nodos
+    func didBegin(_ contact: SKPhysicsContact) {
+        // en contact tenemos bodyA y bodyB que son los cuerpos que hicieron contacto
+        let cuerpoA = contact.bodyA
+        let cuerpoB = contact.bodyB
+        // Miramos si el koopa toca la moneda
+        if (cuerpoA.categoryBitMask == tipoNodo.koopa.rawValue && cuerpoB.categoryBitMask == tipoNodo.coin.rawValue) || (cuerpoA.categoryBitMask == tipoNodo.coin.rawValue && cuerpoB.categoryBitMask == tipoNodo.koopa.rawValue) {
+            self.score += 1
+            lblScore.text = "Score: \(score)"
+        }
+    }
+    
+    func crearKoopa() {
+//        Le añadimos una textura inicial al koopa
         self.koopa = SKSpriteNode(texture: texturesKoopaFly[0])
-        
+//        Le añadimos cuerpo físico al koopa
         self.koopa.physicsBody = SKPhysicsBody(circleOfRadius: texturesKoopaFly[0].size().height / 2)
         self.koopa.zPosition = 8
         
+//        Tendrá gravedad
         self.koopa.physicsBody?.isDynamic = true
         
+//        Lo creamos en una posición inicial
         self.koopa.position = CGPoint(x: self.frame.minX - self.frame.minX * 0.1, y: self.frame.midY)
+        
+//        Le añadimos su categoría
+        self.koopa.physicsBody?.categoryBitMask = tipoNodo.koopa.rawValue
+        
+//        Colisiona con:
+        self.koopa.physicsBody?.collisionBitMask = tipoNodo.limits.rawValue
+        
+//        Hace contacto con:
+        self.koopa.physicsBody?.contactTestBitMask = tipoNodo.limits.rawValue | tipoNodo.coin.rawValue
         
         self.addChild(koopa)
     }
     
-    func cerateBgAnimated() {
+    func crearBgAnimado() {
         
         bg.position = CGPoint(x: 0.0, y: 0.0)
         bg.zPosition = -1
@@ -185,7 +211,6 @@ class GameScene: SKScene {
         lblScore.text = "Score: \(score)"
         lblScore.fontSize = 24
         lblScore.fontColor = SKColor.green
-        lblScore.position = CGPoint(x: self.frame.maxX - lblScore.frame.width / 2, y: self.frame.maxY - lblScore.frame.height)
         lblScore.zPosition = 10
         self.addChild(lblScore)
     }
@@ -204,6 +229,10 @@ class GameScene: SKScene {
         let coinAnimation = SKAction.animate(with: texturasCoin, timePerFrame: 0.02)
         let coinAnimationForever = SKAction.repeatForever(coinAnimation)
         self.coin.run(coinAnimationForever)
+        
+        self.coin.physicsBody?.categoryBitMask = tipoNodo.coin.rawValue
+        self.coin.physicsBody?.collisionBitMask = 0
+        self.coin.physicsBody?.contactTestBitMask = tipoNodo.koopa.rawValue
         
         self.addChild(coin)
     }
@@ -238,8 +267,6 @@ class GameScene: SKScene {
         self.addChild(ground)
         self.addChild(roof)
     }
-    
-//    https://stackoverflow.com/questions/21267600/is-it-possible-to-deactivate-collisions-in-physics-bodies-in-spritekit
     
     func animateFly() {
         let animationFly = SKAction.animate(with: texturesKoopaFly, timePerFrame: 0.05)
