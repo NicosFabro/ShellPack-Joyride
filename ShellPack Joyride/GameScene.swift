@@ -15,8 +15,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var koopa = SKSpriteNode()
     var bg = SKSpriteNode()
-    var coin = SKSpriteNode()
+//    var coin = SKSpriteNode()
     let lblScore = SKLabelNode(fontNamed: "AvenirNext-Bold")
+    
+    var heart1 = SKSpriteNode()
+    var heart2 = SKSpriteNode()
+    var heart3 = SKSpriteNode()
     
     let texturesKoopaFly = [
         SKTexture(imageNamed: "koopa-fly1.png"),
@@ -76,24 +80,39 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         SKTexture(imageNamed: "coin21.png")
     ]
     
+    let texturasLuigi = [
+        SKTexture(imageNamed: "luigi1.png"),
+        SKTexture(imageNamed: "luigi2.png"),
+        SKTexture(imageNamed: "luigi3.png")
+    ]
+    
+    let texturasHeart = [
+        SKTexture(imageNamed: "heart1.png"),
+        SKTexture(imageNamed: "heart2.png"),
+    ]
+    
     // Enumeración de los nodos que pueden colisionar
     // se les debe representar con números potencia de 2
     enum tipoNodo: UInt32 {
         case koopa = 1      // Koopa colisiona
         case limits = 2     // Si choca con el suelo o el techo
         case coin = 0       // Si toca una moneda
+        case enemy = 4      // Si toca un enemigo
     }
     
     var score = 0
+    var hearts = 3
     
     override func didMove(to view: SKView) {
         self.physicsWorld.contactDelegate = self
-        timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.createCoin), userInfo: nil, repeats: true)
+        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.createCoin), userInfo: nil, repeats: true)
+        timer = Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(self.createLuigi), userInfo: nil, repeats: true)
         
         crearKoopa()
         crearBgAnimado()
         createLimits()
         createScoreLabel()
+        createHearts()
         scene?.scaleMode = SKSceneScaleMode.resizeFill
         
         print("Max Y = \(self.frame.maxY)")
@@ -106,7 +125,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
          }
          
          for t in touches { self.touchDown(atPoint: t.location(in: self)) }*/
-        animateFly()
+        fly()
     }
     
     /*
@@ -144,6 +163,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 cuerpoA.node?.removeFromParent()
             } else {
                 cuerpoB.node?.removeFromParent()
+            }
+        } else if (cuerpoA.categoryBitMask == tipoNodo.koopa.rawValue && cuerpoB.categoryBitMask == tipoNodo.enemy.rawValue) || (cuerpoA.categoryBitMask == tipoNodo.enemy.rawValue && cuerpoB.categoryBitMask == tipoNodo.koopa.rawValue) {
+            self.hearts -= 1
+            
+            switch hearts {
+            case 2:
+                self.heart1.texture = texturasHeart[1]
+            case 1:
+                self.heart2.texture = texturasHeart[1]
+            case 0:
+                self.heart3.texture = texturasHeart[1]
+            default:
+                self.heart1.texture = texturasHeart[0]
+                self.heart2.texture = texturasHeart[0]
+                self.heart3.texture = texturasHeart[0]
             }
         }
     }
@@ -225,34 +259,65 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.addChild(lblScore)
     }
     
-    @objc func createCoin(position: CGPoint) {
+    @objc func createCoin() {
         
-        self.coin = SKSpriteNode(texture: texturasCoin[0])
+        let coin = SKSpriteNode(texture: texturasCoin[0])
         
-        self.coin.physicsBody = SKPhysicsBody(circleOfRadius: texturasCoin[0].size().height / 2)
+        coin.physicsBody = SKPhysicsBody(circleOfRadius: texturasCoin[0].size().height / 2)
         let maxY = Int(self.frame.maxY)
         let randY = CGFloat(arc4random_uniform(UInt32(maxY * 2))) + CGFloat(maxY * -1)
-        self.coin.position = CGPoint(x: self.frame.maxX, y: randY)
-        self.coin.zPosition = 0
-        self.coin.setScale(0.5)
+        coin.position = CGPoint(x: self.frame.maxX, y: randY)
+        coin.zPosition = 0
+        coin.setScale(0.5)
         
-        self.coin.physicsBody?.isDynamic = false
+        coin.physicsBody?.isDynamic = false
         
         let coinAnimation = SKAction.animate(with: texturasCoin, timePerFrame: 0.02)
         let coinAnimationForever = SKAction.repeatForever(coinAnimation)
-        self.coin.run(coinAnimationForever)
+        coin.run(coinAnimationForever)
         
-        self.coin.physicsBody?.collisionBitMask = 0
-        self.coin.physicsBody?.categoryBitMask = tipoNodo.coin.rawValue
-        self.coin.physicsBody?.contactTestBitMask = tipoNodo.koopa.rawValue
+        coin.physicsBody?.collisionBitMask = 0
+        coin.physicsBody?.categoryBitMask = tipoNodo.coin.rawValue
+        coin.physicsBody?.contactTestBitMask = tipoNodo.koopa.rawValue
         
         let moverCoin = SKAction.move(by: CGVector(dx: -3 * self.frame.width, dy: 0), duration: TimeInterval(self.frame.width / 80))
         let borrarCoin = SKAction.removeFromParent()
         let moverBorrarCoin = SKAction.sequence([moverCoin, borrarCoin])
         
-        self.coin.run(moverBorrarCoin)
+        coin.run(moverBorrarCoin)
         
         self.addChild(coin)
+    }
+    
+    @objc func createLuigi() {
+        
+        let luigi = SKSpriteNode(texture: texturasLuigi[0])
+        luigi.size = CGSize(width: 100.0, height: 145.0)
+        
+        luigi.physicsBody = SKPhysicsBody(circleOfRadius: texturasLuigi[0].size().height / 2 * 3)
+        let maxY = Int(self.frame.maxY)
+        let randY = CGFloat(arc4random_uniform(UInt32(maxY * 2))) + CGFloat(maxY * -1)
+        luigi.position = CGPoint(x: self.frame.maxX, y: randY)
+        luigi.zPosition = 0
+        luigi.setScale(0.5)
+        
+        luigi.physicsBody?.isDynamic = false
+        
+        let coinAnimation = SKAction.animate(with: texturasLuigi, timePerFrame: 0.02)
+        let coinAnimationForever = SKAction.repeatForever(coinAnimation)
+        luigi.run(coinAnimationForever)
+        
+        luigi.physicsBody?.collisionBitMask = 0
+        luigi.physicsBody?.categoryBitMask = tipoNodo.enemy.rawValue
+        luigi.physicsBody?.contactTestBitMask = tipoNodo.koopa.rawValue
+        
+        let moverCoin = SKAction.move(by: CGVector(dx: -3 * self.frame.width, dy: 0), duration: TimeInterval(self.frame.width / 80))
+        let borrarCoin = SKAction.removeFromParent()
+        let moverBorrarCoin = SKAction.sequence([moverCoin, borrarCoin])
+        
+        luigi.run(moverBorrarCoin)
+        
+        self.addChild(luigi)
     }
     
     func createLimits() {
@@ -286,10 +351,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.addChild(roof)
     }
     
-    func animateFly() {
+    func fly() {
         self.koopa.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
         self.koopa.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 50))
         let animationFly = SKAction.animate(with: texturesKoopaFly, timePerFrame: 0.05)
         koopa.run(animationFly)
+    }
+    
+    func createHearts() {
+        
+        self.heart1 = SKSpriteNode(texture: texturasHeart[0])
+        self.heart1.zPosition = 2
+        self.heart1.physicsBody?.isDynamic = false
+        self.heart1.position = CGPoint(x: self.frame.maxX - texturasHeart[0].size().width / 2, y: self.frame.maxY - lblScore.frame.height - texturasHeart[0].size().height)
+        self.addChild(heart1)
+        
+        self.heart2 = SKSpriteNode(texture: texturasHeart[0])
+        self.heart2.zPosition = 2
+        self.heart2.physicsBody?.isDynamic = false
+        self.heart2.position = CGPoint(x: self.frame.maxX - texturasHeart[0].size().width * 1.5, y: self.frame.maxY - lblScore.frame.height - texturasHeart[0].size().height)
+        self.addChild(heart2)
+        
+        self.heart3 = SKSpriteNode(texture: texturasHeart[0])
+        self.heart3.zPosition = 2
+        self.heart3.physicsBody?.isDynamic = false
+        self.heart3.position = CGPoint(x: self.frame.maxX - texturasHeart[0].size().width * 2.5, y: self.frame.maxY - lblScore.frame.height - texturasHeart[0].size().height)
+        self.addChild(heart3)
     }
 }
