@@ -11,11 +11,13 @@ import GameplayKit
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
-    var timer = Timer()
+    var timerCoins = Timer()
+    var timerEnemies = Timer()
     
     var koopa = SKSpriteNode()
     var bg = SKSpriteNode()
-//    var coin = SKSpriteNode()
+    
+    let lblGameOver = SKLabelNode(fontNamed: "AvenirNext-Bold")
     let lblScore = SKLabelNode(fontNamed: "AvenirNext-Bold")
     
     var heart1 = SKSpriteNode()
@@ -45,7 +47,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         SKTexture(imageNamed: "koopa-walk8.png")
     ]
     
-    let texturasKoopaNaked = [
+    let texturesKoopaNaked = [
         SKTexture(imageNamed: "koopa-naked1.png"),
         SKTexture(imageNamed: "koopa-naked2.png"),
         SKTexture(imageNamed: "koopa-naked3.png"),
@@ -88,7 +90,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     let texturasHeart = [
         SKTexture(imageNamed: "heart1.png"),
-        SKTexture(imageNamed: "heart2.png"),
+        SKTexture(imageNamed: "heart2.png")
     ]
     
     // Enumeración de los nodos que pueden colisionar
@@ -105,48 +107,63 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
         self.physicsWorld.contactDelegate = self
-        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.createCoin), userInfo: nil, repeats: true)
-        timer = Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(self.createLuigi), userInfo: nil, repeats: true)
-        
+        scene?.scaleMode = SKSceneScaleMode.resizeFill
+        restart()
+        print("Max Y = \(self.frame.maxY)")
+        print("Min Y = \(self.frame.minY)")
+    }
+    
+    func restart() {
+        self.timerCoins = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.createCoin), userInfo: nil, repeats: true)
+        self.timerEnemies = Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(self.createLuigi), userInfo: nil, repeats: true)
         crearKoopa()
         crearBgAnimado()
         createLimits()
         createScoreLabel()
         createHearts()
-        scene?.scaleMode = SKSceneScaleMode.resizeFill
-        
-        print("Max Y = \(self.frame.maxY)")
-        print("Min Y = \(self.frame.minY)")
+        self.gameOver = false
+        self.score = 0
+        self.speed = 1
+        self.hearts = 3
+        self.removeChildren(in: [lblGameOver])
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        /*if let label = self.label {
-         label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
-         }
-         
-         for t in touches { self.touchDown(atPoint: t.location(in: self)) }*/
-        fly()
+        if !gameOver {
+            if self.hearts == 3 {
+                fly()
+            } else {
+                jump()
+            }
+        } else {
+            self.removeAllChildren()
+            restart()
+        }
     }
     
-    /*
-     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-     for t in touches { self.touchMoved(toPoint: t.location(in: self)) }
-     }
-     
-     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-     for t in touches { self.touchUp(atPoint: t.location(in: self)) }
-     }
-     
-     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-     for t in touches { self.touchUp(atPoint: t.location(in: self)) }
-     }
-     */
+    var gameOver = false
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
-//        self.coin.position.x -= 10
-        lblScore.text = "Score: \(score)"
-        lblScore.position = CGPoint(x: self.frame.maxX - lblScore.frame.width / 2, y: self.frame.maxY - lblScore.frame.height)
+        self.lblScore.text = "Score: \(score)"
+        self.lblScore.position = CGPoint(x: self.frame.maxX - lblScore.frame.width / 2, y: self.frame.maxY - lblScore.frame.height)
+        
+        if self.hearts == 0 && self.speed == 1 {
+            createGameOverLabel()
+            self.gameOver = true
+            self.timerCoins.invalidate()
+            self.timerEnemies.invalidate()
+        }
+    }
+    
+    func createGameOverLabel() {
+        self.lblGameOver.text = "Game Over"
+        self.lblGameOver.fontSize = 30
+        self.lblGameOver.fontColor = SKColor.red
+        self.lblGameOver.zPosition = 10
+        self.lblGameOver.position = CGPoint(x: self.frame.midX, y: self.frame.midY)
+        self.addChild(lblGameOver)
+        self.speed = 0
     }
     
     // Función para tratar las colisiones o contactos de los nodos
@@ -170,15 +187,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             switch hearts {
             case 2:
                 self.heart1.texture = texturasHeart[1]
+                koopa2Hearts()
             case 1:
                 self.heart2.texture = texturasHeart[1]
+                koopa1Heart()
             case 0:
                 self.heart3.texture = texturasHeart[1]
             default:
-                self.heart1.texture = texturasHeart[0]
-                self.heart2.texture = texturasHeart[0]
-                self.heart3.texture = texturasHeart[0]
+                self.heart1.texture = texturasHeart[1]
+                self.heart2.texture = texturasHeart[1]
+                self.heart3.texture = texturasHeart[1]
             }
+        } else if (cuerpoA.categoryBitMask == tipoNodo.koopa.rawValue && cuerpoB.categoryBitMask == tipoNodo.limits.rawValue) || (cuerpoA.categoryBitMask == tipoNodo.limits.rawValue && cuerpoB.categoryBitMask == tipoNodo.koopa.rawValue) {
+            self.isGround = true
+            self.numJumps = 0
         }
     }
     
@@ -207,6 +229,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.addChild(koopa)
     }
     
+    func koopa2Hearts() {
+        
+        let animationWalk = SKAction.animate(with: texturesKoopaWalk, timePerFrame: 0.05)
+        let animationWalkForever = SKAction.repeatForever(animationWalk)
+        self.koopa.run(animationWalkForever)
+    }
+    
+    func koopa1Heart() {
+        let animationNaked = SKAction.animate(with: texturesKoopaNaked, timePerFrame: 0.05)
+        let animationNakedForever = SKAction.repeatForever(animationNaked)
+        self.koopa.run(animationNakedForever)
+    }
+    
     func crearBgAnimado() {
         
         bg.position = CGPoint(x: 0.0, y: 0.0)
@@ -228,7 +263,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // contador de fondos
         var i: CGFloat = 0
         
-        while i < 2 {
+        while i < 3 {
             // Le ponemos la textura al fondo
             self.bg = SKSpriteNode(texture: textureBg)
             
@@ -356,6 +391,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.koopa.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 50))
         let animationFly = SKAction.animate(with: texturesKoopaFly, timePerFrame: 0.05)
         koopa.run(animationFly)
+    }
+    
+    var isGround = false
+    
+    var numJumps = 0
+    
+    func jump() {
+        if self.isGround || (self.numJumps == 1 && self.hearts == 2) {
+            self.koopa.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 50))
+        }
+        
+        self.isGround = false
+        self.numJumps += 1
     }
     
     func createHearts() {
