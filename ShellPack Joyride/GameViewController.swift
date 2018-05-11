@@ -2,7 +2,7 @@
 //  GameViewController.swift
 //  ShellPack Joyride
 //
-//  Created by DAM on 25/4/18.
+//  Created by Nicos Fabro on 25/4/18.
 //  Copyright © 2018 Nicos Fabro. All rights reserved.
 //
 
@@ -26,10 +26,10 @@ class GameViewController: UIViewController {
             }
             
             view.ignoresSiblingOrder = true
-            view.showsPhysics = true
+            view.showsPhysics = false
             
-            view.showsFPS = true
-            view.showsNodeCount = true
+            view.showsFPS = false
+            view.showsNodeCount = false
         }
     }
 

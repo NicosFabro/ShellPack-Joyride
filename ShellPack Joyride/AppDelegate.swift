@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  ShellPack Joyride
 //
-//  Created by DAM on 25/4/18.
+//  Created by Nicos Fabro on 25/4/18.
 //  Copyright © 2018 Nicos Fabro. All rights reserved.
 //
 
